@@ -17,6 +17,7 @@ export interface CreateTodoInput {
   priority?: Priority
   category_id?: string | null
   due_date?: string | null
+  created_at?: string
 }
 
 export interface UpdateTodoInput {

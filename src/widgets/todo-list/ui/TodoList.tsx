@@ -21,14 +21,19 @@ import { CSS } from "@dnd-kit/utilities"
 import { useTodoStore } from "@/entities/todo/model/useTodoStore"
 import { useCategoryStore } from "@/entities/category/model/useCategoryStore"
 import { useFilterStore } from "@/shared/model/useFilterStore"
+import { useCalendarStore } from "@/shared/model/useCalendarStore"
 import { TodoItem } from "@/entities/todo/ui/TodoItem"
 import { TodoEditDialog } from "@/features/todo-edit/ui/TodoEditDialog"
+import { AddTodoForm } from "@/features/todo-create/ui/AddTodoForm"
 import { useToast } from "@/shared/lib/use-toast"
 import { toggleTodo } from "@/features/todo-toggle/api/toggleTodo"
 import { deleteTodo } from "@/features/todo-delete/api/deleteTodo"
 import { reorderTodos } from "@/features/todo-reorder/api/reorderTodos"
 import type { Todo } from "@/entities/todo/model/types"
 import type { Category } from "@/entities/category/model/types"
+
+// en-CA 로케일은 YYYY-MM-DD 형식 반환 (날짜 필터 키 생성에 사용)
+const toDateKey = (d: Date | string) => new Date(d).toLocaleDateString("en-CA")
 
 interface SortableItemProps {
   todo: Todo
@@ -75,6 +80,7 @@ export function TodoList() {
     useTodoStore()
   const { categories } = useCategoryStore()
   const { searchQuery, filterBy, sortBy, selectedCategory } = useFilterStore()
+  const selectedDate = useCalendarStore((s) => s.selectedDate)
   const { toast } = useToast()
   const [editTodo, setEditTodo] = useState<Todo | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -86,8 +92,16 @@ export function TodoList() {
     })
   )
 
+  const dateTitle = selectedDate.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  })
+
   // 클라이언트 사이드 필터링 + 정렬
   const filteredTodos = todos
+    .filter((t) => toDateKey(t.created_at) === toDateKey(selectedDate))
     .filter((t) => {
       if (filterBy === "done") return t.is_done
       if (filterBy === "undone") return !t.is_done
@@ -166,42 +180,46 @@ export function TodoList() {
     }
   }
 
-  if (filteredTodos.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-sm text-muted-foreground">
-          {searchQuery ? "검색 결과가 없습니다" : "투두가 없습니다. 새 투두를 추가해보세요!"}
-        </p>
-      </div>
-    )
-  }
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-sm text-muted-foreground">
+        {searchQuery ? "검색 결과가 없습니다" : "이 날에 등록된 투두가 없습니다. 새 투두를 추가해보세요!"}
+      </p>
+    </div>
+  )
 
   if (sortBy === "position") {
     return (
       <>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={filteredTodos.map((t) => t.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 lg:gap-4">
-              {filteredTodos.map((todo) => (
-                <SortableTodoItem
-                  key={todo.id}
-                  todo={todo}
-                  categories={categories}
-                  onToggle={handleToggle}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <h2 className="text-base font-semibold text-foreground mb-3">{dateTitle}</h2>
+        <AddTodoForm />
+        <div className="mt-4">
+          {filteredTodos.length === 0 ? emptyState : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredTodos.map((t) => t.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col divide-y divide-border">
+                  {filteredTodos.map((todo) => (
+                    <SortableTodoItem
+                      key={todo.id}
+                      todo={todo}
+                      categories={categories}
+                      onToggle={handleToggle}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
         <TodoEditDialog todo={editTodo} open={editOpen} onOpenChange={setEditOpen} />
       </>
     )
@@ -209,18 +227,24 @@ export function TodoList() {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 lg:gap-4">
-        {filteredTodos.map((todo) => (
-          <div key={todo.id}>
-            <TodoItem
-              todo={todo}
-              categories={categories}
-              onToggle={handleToggle}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+      <h2 className="text-base font-semibold text-foreground mb-3">{dateTitle}</h2>
+      <AddTodoForm />
+      <div className="mt-4">
+        {filteredTodos.length === 0 ? emptyState : (
+          <div className="flex flex-col divide-y divide-border">
+            {filteredTodos.map((todo) => (
+              <div key={todo.id}>
+                <TodoItem
+                  todo={todo}
+                  categories={categories}
+                  onToggle={handleToggle}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
       <TodoEditDialog todo={editTodo} open={editOpen} onOpenChange={setEditOpen} />
     </>

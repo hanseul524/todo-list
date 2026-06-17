@@ -41,6 +41,7 @@ export async function createTodo(
       category_id: input.category_id ?? null,
       due_date: input.due_date ?? null,
       position: nextPosition,
+      ...(input.created_at ? { created_at: input.created_at } : {}),
     })
     .select()
     .single()

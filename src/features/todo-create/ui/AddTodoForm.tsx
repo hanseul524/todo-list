@@ -23,6 +23,7 @@ import { useTodoStore } from "@/entities/todo/model/useTodoStore"
 import { useCategoryStore } from "@/entities/category/model/useCategoryStore"
 import { useToast } from "@/shared/lib/use-toast"
 import { createTodo } from "@/features/todo-create/api/createTodo"
+import { useCalendarStore } from "@/shared/model/useCalendarStore"
 import type { Priority } from "@/entities/todo/model/types"
 
 export function AddTodoForm() {
@@ -36,6 +37,7 @@ export function AddTodoForm() {
   const { addTodo, deleteTodo } = useTodoStore()
   const { categories } = useCategoryStore()
   const { toast } = useToast()
+  const selectedDate = useCalendarStore((s) => s.selectedDate)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -53,7 +55,7 @@ export function AddTodoForm() {
       due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : null,
       is_done: false,
       position: 9999,
-      created_at: new Date().toISOString(),
+      created_at: selectedDate.toISOString(),
     }
 
     addTodo(optimisticTodo)
@@ -66,6 +68,7 @@ export function AddTodoForm() {
       priority,
       category_id: categoryId || null,
       due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : null,
+      created_at: selectedDate.toISOString(),
     })
 
     if (result.error) {
