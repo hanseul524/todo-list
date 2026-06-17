@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
 import { signIn } from "@/features/auth/api/authActions"
+import { GitHubLoginButton } from "./GitHubLoginButton"
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -66,6 +67,15 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "로그인 중..." : "로그인"}
           </Button>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">또는</span>
+            </div>
+          </div>
+          <GitHubLoginButton />
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           계정이 없으신가요?{" "}
