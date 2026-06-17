@@ -5,9 +5,9 @@ import { DayButton } from "react-day-picker"
 import { Calendar, CalendarDayButton } from "@/shared/ui/calendar"
 import { useTodoStore } from "@/entities/todo/model/useTodoStore"
 import { useCalendarStore } from "@/shared/model/useCalendarStore"
-import { cn } from "@/shared/lib/utils"
+import { getPriorityMapByDate } from "@/shared/lib/calendarUtils"
+import { PriorityBar } from "@/entities/todo/ui/PriorityBar"
 
-// en-CA 로케일은 YYYY-MM-DD 형식 반환 (ISO 날짜 키 생성에 사용)
 const toDateKey = (d: Date | string) =>
   new Date(d).toLocaleDateString("en-CA")
 
@@ -15,8 +15,8 @@ export function CalendarSidebar() {
   const todos = useTodoStore((s) => s.todos)
   const { selectedDate, setSelectedDate } = useCalendarStore()
 
-  const datesWithTodos = useMemo(
-    () => new Set(todos.map((t) => toDateKey(t.created_at))),
+  const priorityMap = useMemo(
+    () => getPriorityMapByDate(todos),
     [todos]
   )
 
@@ -33,17 +33,11 @@ export function CalendarSidebar() {
         components={{
           DayButton: (props: React.ComponentProps<typeof DayButton>) => {
             const dateKey = toDateKey(props.day.date)
-            const hasTodo = datesWithTodos.has(dateKey)
+            const priorities = priorityMap[dateKey] ?? []
             return (
               <CalendarDayButton {...props}>
                 <span>{props.day.date.getDate()}</span>
-                {hasTodo && (
-                  <span
-                    className={cn(
-                      "absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#5e6ad2]"
-                    )}
-                  />
-                )}
+                <PriorityBar priorities={priorities} />
               </CalendarDayButton>
             )
           },
