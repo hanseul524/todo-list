@@ -1,0 +1,11 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@todo/types": ["../../packages/types/src/index.ts"],
+      "@todo/utils": ["../../packages/utils/src/index.ts"]
+    }
+  }
+}
